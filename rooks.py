@@ -26,17 +26,56 @@ def main():
 
     phi = Glucose3()
 
-    allVariables = []
-    # Placeholder formula
-    for r in range(n):
-        for c in range(n):
-            allVariables.append(1*gridVariables[(r,c)])
-    phi.add_clause(allVariables)
-            
+
+    # Rows
+    for row in range(n):
+        # First, or together the row and add it as a clause
+        row_ord = []
+        for col in range(n):
+            row_ord.append(gridVariables[(row,col)])
+        phi.add_clause(row_ord)
+
+        # Now, we take every index from the row and enumerate
+        # all possibilities between each index. We want
+        # implication, so we negate each index before adding
+        # to the clause.
+        more_ord = []
+        for j in range(n - 1):
+            for k in range(j + 1, n):
+                more_ord.append(-row_ord[j])
+                more_ord.append(-row_ord[k])
+                phi.add_clause(more_ord)
+                more_ord = []
+
+    # Columns (we can just switch row/col indices)
+    for row in range(n):
+        row_ord = []
+        for col in range(n):
+            row_ord.append(gridVariables[(col,row)])
+        phi.add_clause(row_ord)
+
+        more_ord = []
+        for j in range(n - 1):
+            for k in range(j + 1, n):
+                more_ord.append(-row_ord[j])
+                more_ord.append(-row_ord[k])
+                phi.add_clause(more_ord)
+                more_ord = []
 
     phi.solve()
     m = phi.get_model()
     print("Solution:")
+    print_model(m, n, gridVariables)
+    
+
+    count = 0
+    for s in phi.enum_models():
+        #print(s)
+        print_model(s, n, gridVariables)
+        count +=1
+    print("Total number of models: %d" %(count))
+
+def print_model(m, n, gridVariables):
     for r in range(n):
         for c in range(n):
             if(gridVariables[(r,c)] in m):
@@ -45,11 +84,6 @@ def main():
                 print(".",end="")
         print()
     print()
-
-    count = 0
-    for s in phi.enum_models():
-        count +=1
-    print("Total number of models: %d" %(count))
 
 
 if __name__ == "__main__":
