@@ -26,51 +26,37 @@ def main():
 
     phi = Glucose3()
 
+    # We essentially want an XOR of each row and each column,
+    # but we build that into CNF. We want x11 or x12 or x13...
+    # and so on, but need the negations as well to make sure
+    # only one variable in a row/column is active at once.
 
-    # Rows
+
+    cur_list = []
+    cur_list_2 = []
     for row in range(n):
-        # First, or together the row and add it as a clause
-        row_ord = []
         for col in range(n):
-            row_ord.append(gridVariables[(row,col)])
-        phi.add_clause(row_ord)
-
-        # Now, we take every index from the row and enumerate
-        # all possibilities between each index. We want
-        # implication, so we negate each index before adding
-        # to the clause.
-        more_ord = []
-        for j in range(n - 1):
-            for k in range(j + 1, n):
-                more_ord.append(-row_ord[j])
-                more_ord.append(-row_ord[k])
-                phi.add_clause(more_ord)
-                more_ord = []
-
-    # Columns (we can just switch row/col indices)
-    for row in range(n):
-        row_ord = []
-        for col in range(n):
-            row_ord.append(gridVariables[(col,row)])
-        phi.add_clause(row_ord)
-
-        more_ord = []
-        for j in range(n - 1):
-            for k in range(j + 1, n):
-                more_ord.append(-row_ord[j])
-                more_ord.append(-row_ord[k])
-                phi.add_clause(more_ord)
-                more_ord = []
+            cur_list.append(gridVariables[(row,col)])
+            cur_list_2.append(gridVariables[(col,row)])
+            if col + 1 != n:
+                for j in range(col + 1, n):
+                    row_pair_list = []
+                    col_pair_list = []
+                    row_pair_list.append(-gridVariables[(row,col)])
+                    row_pair_list.append(-gridVariables[(row, j)])
+                    col_pair_list.append(-gridVariables[(col,row)])
+                    col_pair_list.append(-gridVariables[(j,row)])
+                    phi.add_clause(row_pair_list)
+                    phi.add_clause(col_pair_list)
+        phi.add_clause(cur_list)
+        phi.add_clause(cur_list_2)
+        cur_list = []
+        cur_list_2 = []
 
     phi.solve()
-    m = phi.get_model()
-    print("Solution:")
-    print_model(m, n, gridVariables)
     
-
     count = 0
     for s in phi.enum_models():
-        #print(s)
         print_model(s, n, gridVariables)
         count +=1
     print("Total number of models: %d" %(count))
