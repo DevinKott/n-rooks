@@ -54,10 +54,11 @@ def main():
         cur_list_2 = []
 
     phi.solve()
-    
+
     count = 0
     for s in phi.enum_models():
-        print_model(s, n, gridVariables)
+        if count == 0:
+            print_model(s, n, gridVariables)
         count +=1
     print("Total number of models: %d" %(count))
 
